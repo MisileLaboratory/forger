@@ -1,3 +1,8 @@
+struct Parser {
+  modloader: String,
+  version: String
+}
+
 fn main() {
-  println!("hello, miku!")
+  
 }
