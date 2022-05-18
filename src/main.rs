@@ -64,8 +64,8 @@ async fn install_fabric(server: bool) -> Result<(), Error> {
   let version = version.metadata.versioning.latest_version;
   drop(response);
   let filename = format!("fabric-installer-{}{}.jar", version, serverstring);
-  if Path::new(filename).exists() {
-    remove_file(filename)?;
+  if Path::new(&filename).exists() {
+    remove_file(filename.clone())?;
   }
   let mut response = reqwest::get(format!("https://maven.fabricmc.net/net/fabricmc/fabric-installer/{}/{}", version, filename)).await?;
   // let mut file =
