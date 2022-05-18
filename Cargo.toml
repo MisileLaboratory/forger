@@ -11,6 +11,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-quick-xml = "0.22.0"
+anyhow = "1.0.56"
+quick-xml = { version = "0.22.0", features = ["serialize"] }
 serde = { version = "1.0.137", features = ["derive"] }
 clap = { version = "3.1.18", features = ["derive"] }
+reqwest = "0.11.10"
+tokio = { version = "1.18.2", features = ["full"] }
