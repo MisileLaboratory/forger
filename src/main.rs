@@ -6,7 +6,13 @@ use serde::Deserialize;
 
 use anyhow::Error;
 
-use std::{path::Path, fs::remove_file};
+use tokio::{
+  process::Command,
+  fs::{remove_file, File},
+  io::copy,
+};
+
+use std::path::Path;
 
 /// Download fabric, quilt server or client with cli.
 #[derive(Parser, Debug)]
@@ -31,8 +37,10 @@ struct ModLoaderVersion {
 }
 
 #[derive(Deserialize)]
+#[warn(dead_code)]
 struct XMLMetadata {
-  groupId: String,
+  #[serde(rename = "groupId")]
+  group_id: String,
   artifactId: String,
   versioning: Versions
 }
@@ -52,12 +60,11 @@ async fn main() {
   let args = ForgerParser::parse();
 }
 
-// https://maven.fabricmc.net/net/fabricmc/fabric-installer/maven-metadata.xml
-async fn install_fabric(server: bool) -> Result<(), Error> {
+async fn install_fabric(server: bool, version: String) -> Result<(), Error> {
   let serverstring = if server {
-    "-server"
+    "server"
   } else {
-    ""
+    "client"
   };
   let response = reqwest::get("https://maven.fabricmc.net/net/fabricmc/fabric-installer/maven-metadata.xml").await?.text().await?;
   let version: ModLoaderVersion = quick_xml::de::from_str(&response)?;
@@ -65,9 +72,14 @@ async fn install_fabric(server: bool) -> Result<(), Error> {
   drop(response);
   let filename = format!("fabric-installer-{}{}.jar", version, serverstring);
   if Path::new(&filename).exists() {
-    remove_file(filename.clone())?;
+    remove_file(filename.clone()).await?;
   }
-  let mut response = reqwest::get(format!("https://maven.fabricmc.net/net/fabricmc/fabric-installer/{}/{}", version, filename)).await?;
-  // let mut file =
+  let response = reqwest::get(format!("https://maven.fabricmc.net/net/fabricmc/fabric-installer/{}/{}", version, filename)).await?;
+  let mut file = File::create(filename.clone()).await?;
+  let response_content = response.bytes().await?;
+  let mut bresponse_content = response_content.as_ref();
+  copy(&mut bresponse_content, &mut file).await?;
+  drop(bresponse_content);
+  Command::new("java").arg("-jar").arg(filename).args(&[serverstring, "-mcversion"]).arg(version).arg("-downloadMinecraft").spawn()?;
   Ok(())
 }
