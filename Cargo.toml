@@ -16,4 +16,4 @@ quick-xml = { version = "0.22.0", features = ["serialize"] }
 serde = { version = "1.0.137", features = ["derive"] }
 clap = { version = "3.1.18", features = ["derive"] }
 reqwest = "0.11.10"
-tokio = { version = "1.18.2", features = ["full"] }
+tokio = { version = "1.19.2", features = ["full"] }
